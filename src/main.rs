@@ -1,5 +1,6 @@
 use actix_web::{middleware, App, HttpServer};
 
+mod api_calls;
 mod handlers;
 mod router;
 use router::router;
