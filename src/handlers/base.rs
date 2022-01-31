@@ -15,3 +15,15 @@ pub async fn index() -> HttpResponse {
         .content_type("application/json")
         .json(info)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::http;
+
+    #[actix_web::test]
+    async fn handle_index() {
+        let resp = index().await;
+        assert_eq!(resp.status(), http::StatusCode::OK);
+    }
+}
