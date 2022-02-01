@@ -5,6 +5,7 @@ use actix_web::{middleware, web, App, HttpServer};
 use std::sync::Arc;
 use tokio;
 
+mod actions;
 mod api_calls;
 mod handlers;
 mod router;

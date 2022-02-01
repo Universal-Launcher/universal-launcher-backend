@@ -10,7 +10,7 @@ pub fn register() -> Scope {
                 .route(web::post().to(modpacks::create)),
         )
         .service(
-            web::resource("/{id}")
+            web::resource("/{m_id}")
                 .route(web::get().to(modpacks::show))
                 .route(web::put().to(modpacks::update))
                 .route(web::delete().to(modpacks::delete)),
