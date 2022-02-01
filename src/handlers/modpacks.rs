@@ -1,19 +1,19 @@
 use actix_web::{web, HttpResponse};
-
 extern crate diesel;
 use crate::database::models::*;
 use crate::{actions, handlers::HttpAsyncResponse, utils};
+
+#[derive(serde::Serialize)]
+struct ModpackList {
+    modpacks: Vec<Modpack>,
+}
 
 pub async fn index(data: web::Data<utils::Data>) -> HttpAsyncResponse {
     let result = web::block(move || actions::modpacks::find_all_modpacks(&data.as_ref().pool))
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    if result.len() != 0 {
-        Ok(HttpResponse::Ok().body(format!("There is {} modpacks registered", result.len())))
-    } else {
-        Ok(HttpResponse::Ok().body(format!("There is no modpacks registered")))
-    }
+    Ok(HttpResponse::Ok().json(ModpackList { modpacks: result }))
 }
 
 pub async fn create(
@@ -62,6 +62,12 @@ pub async fn update(
     Ok(HttpResponse::Ok().body(""))
 }
 
-pub async fn delete() -> HttpResponse {
-    HttpResponse::Ok().body("")
+pub async fn delete(data: web::Data<utils::Data>, path: web::Path<(i32,)>) -> HttpAsyncResponse {
+    let (m_id,) = path.into_inner();
+
+    web::block(move || actions::modpacks::delete_by_id(m_id, &data.as_ref().pool))
+        .await?
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    Ok(HttpResponse::Ok().body(""))
 }

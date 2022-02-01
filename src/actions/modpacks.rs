@@ -47,3 +47,12 @@ pub fn update_by_id(m_id: i32, conn: &DbPool, mo: UpdateModpack) -> Result<(), D
 
     Ok(())
 }
+
+pub fn delete_by_id(m_id: i32, conn: &DbPool) -> Result<(), DbError> {
+    use crate::database::schema::modpacks::dsl;
+    let conn = conn.get()?;
+
+    diesel::delete(dsl::modpacks.find(m_id)).execute(&conn)?;
+
+    Ok(())
+}
