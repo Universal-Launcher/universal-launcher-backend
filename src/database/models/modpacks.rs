@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-use super::schema::modpacks;
+use crate::database::schema::modpacks;
 
 #[derive(Debug, Clone, Queryable, Serialize, Deserialize, Identifiable)]
 #[primary_key(id)]

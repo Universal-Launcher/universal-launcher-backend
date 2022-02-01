@@ -3,11 +3,13 @@ use actix_web::{error, web, HttpRequest, HttpResponse};
 use serde::Serialize;
 
 mod base;
+mod modpack_versions;
 mod modpacks;
 
 pub fn router(cfg: &mut web::ServiceConfig) {
     cfg.service(base::register());
     cfg.service(modpacks::register());
+    cfg.service(modpack_versions::register());
 
     cfg.app_data(web::JsonConfig::default().error_handler(json_error_handler));
 

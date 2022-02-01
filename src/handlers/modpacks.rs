@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
 extern crate diesel;
-use crate::database::models::*;
+use crate::database::models::modpacks::*;
 use crate::{actions, handlers::HttpAsyncResponse, utils};
 
 #[derive(serde::Serialize)]

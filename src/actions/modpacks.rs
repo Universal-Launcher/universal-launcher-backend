@@ -1,5 +1,5 @@
 use crate::database::database::DbPool;
-use crate::database::models::{Modpack, NewModpack, UpdateModpack};
+use crate::database::models::modpacks::{Modpack, NewModpack, UpdateModpack};
 
 use diesel::prelude::*;
 
