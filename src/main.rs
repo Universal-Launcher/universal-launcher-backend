@@ -46,7 +46,7 @@ async fn async_main() {
     })
     .workers(8)
     .bind(format!("0.0.0.0:{}", port))
-    .expect("Couldn't bind to port 8080")
+    .expect("Couldn't bind to port {}", port)
     .run()
     .await
     .unwrap()
