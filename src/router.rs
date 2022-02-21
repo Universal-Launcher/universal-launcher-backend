@@ -5,11 +5,13 @@ use serde::Serialize;
 mod base;
 mod modpack_versions;
 mod modpacks;
+mod user;
 
 pub fn router(cfg: &mut web::ServiceConfig) {
     cfg.service(base::register());
     cfg.service(modpacks::register());
     cfg.service(modpack_versions::register());
+    cfg.service(user::register());
 
     cfg.app_data(web::JsonConfig::default().error_handler(json_error_handler));
 
