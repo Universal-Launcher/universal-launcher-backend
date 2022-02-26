@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate diesel;
 
+use actix_cors::Cors;
 use actix_web::{middleware, web, App, HttpServer};
-use std::sync::Arc;
 use tokio;
 
 mod actions;
@@ -34,16 +34,29 @@ async fn async_main() {
 
     let port: String = std::env::var("PORT").unwrap_or(String::from("8080"));
 
-    let db_pool = Arc::new(database::database::init_database().expect("Failed to init database"));
-
     println!("Booting server on port \"{}\"", port);
     HttpServer::new(move || {
+        let cors_origin = std::env::var("CORS_ORIGIN").unwrap_or("".to_string());
+
+        let mut cors = Cors::default()
+            .allow_any_method()
+            .allow_any_header()
+            .max_age(3600);
+
+        if cors_origin.len() > 0 {
+            cors = cors.allowed_origin(cors_origin.as_str());
+        } else {
+            println!("CORS_ORIGIN not set, CORS disabled");
+            cors = cors.allow_any_origin();
+        }
+
+        let data = utils::load_data().expect("Failed to load data");
+
         App::new()
-            .app_data(web::Data::new(utils::Data {
-                pool: Arc::clone(&db_pool),
-            }))
+            .app_data(web::Data::new(data))
             .configure(router)
             .wrap(middleware::Logger::default())
+            .wrap(cors)
     })
     .workers(8)
     .bind(format!("0.0.0.0:{}", port))

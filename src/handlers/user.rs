@@ -1,39 +1,42 @@
-use crate::handlers::HttpAsyncResponse;
 use actix_web::{web, HttpResponse};
-use serde::Deserialize;
-use url::Url;
+use actix_web_4_validator::Json;
 
-const MS_AUTHORIZE_URL: &str = "https://login.live.com/oauth20_authorize.srf";
+use crate::database::models::user::{NewUser, UserLogin};
+use crate::utils::errors::ErrorHandling;
+use crate::{actions, utils};
 
-pub async fn redirect() -> HttpAsyncResponse {
-    let client_id = std::env::var("MSA_CLIENT_ID").unwrap();
-    let redirect_uri = std::env::var("CLIENT_REDIRECT_URI").unwrap();
+use super::HttpAsyncResponse;
 
-    println!("{:?} / {:?}", client_id, redirect_uri);
+pub async fn register_user(
+    new_user: Json<NewUser>,
+    data: web::Data<utils::Data>,
+) -> HttpAsyncResponse {
+    web::block(move || actions::users::create_user(&new_user, &data))
+        .await?
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    let mut u = Url::parse(MS_AUTHORIZE_URL).unwrap();
-    u.query_pairs_mut()
-        .append_pair("client_id", client_id.as_str());
-    u.query_pairs_mut().append_pair("response_type", "code");
-    u.query_pairs_mut()
-        .append_pair("redirect_uri", redirect_uri.as_str());
-    u.query_pairs_mut()
-        .append_pair("scope", "XboxLive.signin offline_access");
-
-    let response = HttpResponse::TemporaryRedirect()
-        .insert_header(("Location", u.as_str()))
-        .finish();
-    Ok(response)
+    Ok(HttpResponse::Ok().finish())
 }
 
-#[derive(Deserialize)]
-pub struct MSAuthCode {
-    pub code: String,
+pub async fn authenticate_user(
+    user: Json<UserLogin>,
+    data: web::Data<utils::Data>,
+) -> HttpAsyncResponse {
+    let result = web::block(move || actions::users::login_user(&user, &data)).await?;
+
+    match result {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Err(e) => {
+            let (status, message) = e;
+            Ok(HttpResponse::build(status).json(ErrorHandling::new(message)))
+        }
+    }
 }
 
-pub async fn fallback(q: web::Query<MSAuthCode>) -> HttpAsyncResponse {
-    let q = q.into_inner();
+pub async fn get_user() -> HttpAsyncResponse {
+    Ok(HttpResponse::Ok().finish())
+}
 
-    println!("MS Auth code: {}", q.code);
+pub async fn logout_user() -> HttpAsyncResponse {
     Ok(HttpResponse::Ok().finish())
 }

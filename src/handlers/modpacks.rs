@@ -18,14 +18,9 @@ pub async fn index(data: web::Data<utils::Data>) -> HttpAsyncResponse {
 
 pub async fn create(
     data: web::Data<utils::Data>,
-    item: web::Json<NewModpack>,
+    new_modpack: web::Json<NewModpack>,
 ) -> HttpAsyncResponse {
-    let modpack = NewModpack {
-        name: item.name.clone(),
-        description: item.description.clone(),
-    };
-
-    web::block(move || actions::modpacks::insert_modpack(modpack, &data.as_ref().pool))
+    web::block(move || actions::modpacks::insert_modpack(&new_modpack, &data.as_ref().pool))
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
@@ -43,7 +38,7 @@ pub async fn show(data: web::Data<utils::Data>, path: web::Path<(i32,)>) -> Http
     if let Some(modpack) = modpack {
         Ok(HttpResponse::Ok().json(modpack))
     } else {
-        let res = HttpResponse::NotFound().body("");
+        let res = HttpResponse::NotFound().finish();
         Ok(res)
     }
 }
@@ -69,5 +64,5 @@ pub async fn delete(data: web::Data<utils::Data>, path: web::Path<(i32,)>) -> Ht
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    Ok(HttpResponse::Ok().body(""))
+    Ok(HttpResponse::Ok().finish())
 }

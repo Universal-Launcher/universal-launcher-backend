@@ -1,9 +1,7 @@
-use crate::database::database::DbPool;
+use crate::database::database::{DbError, DbPool};
 use crate::database::models::modpacks::{Modpack, NewModpack, UpdateModpack};
 
 use diesel::prelude::*;
-
-type DbError = Box<dyn std::error::Error + Send + Sync>;
 
 pub fn find_all_modpacks(conn: &DbPool) -> Result<Vec<Modpack>, DbError> {
     use crate::database::schema::modpacks::dsl::*;
@@ -26,12 +24,12 @@ pub fn find_modpack_by_id(m_id: i32, conn: &DbPool) -> Result<Option<Modpack>, D
     Ok(modpack)
 }
 
-pub fn insert_modpack(mo: NewModpack, conn: &DbPool) -> Result<(), DbError> {
+pub fn insert_modpack(mo: &NewModpack, conn: &DbPool) -> Result<(), DbError> {
     use crate::database::schema::modpacks;
     let conn = conn.get()?;
 
     diesel::insert_into(modpacks::table)
-        .values(&mo)
+        .values(mo)
         .execute(&conn)?;
 
     Ok(())
