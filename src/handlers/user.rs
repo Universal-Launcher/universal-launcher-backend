@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{http, web, HttpResponse};
 use actix_web_4_validator::Json;
 
 use crate::database::models::user::{NewUser, UserLogin};
@@ -11,11 +11,30 @@ pub async fn register_user(
     new_user: Json<NewUser>,
     data: web::Data<utils::Data>,
 ) -> HttpAsyncResponse {
-    web::block(move || actions::users::create_user(&new_user, &data))
-        .await?
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+    let user_check = new_user.clone();
+    let data_check = data.clone();
+    let result =
+        web::block(move || actions::users::check_if_exists(&user_check, &data_check)).await?;
 
-    Ok(HttpResponse::Ok().finish())
+    if result.is_err() {
+        let (status, message) = result.unwrap_err();
+        return Ok(HttpResponse::build(status).json(ErrorHandling::new(message)));
+    }
+
+    if result.unwrap() {
+        return Ok(HttpResponse::build(http::StatusCode::CONFLICT)
+            .json(ErrorHandling::new("errors.auth.already_exists".to_string())));
+    }
+
+    let result = web::block(move || actions::users::create_user(&new_user, &data)).await?;
+
+    match result {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Err(e) => {
+            let (status, message) = e;
+            Ok(HttpResponse::build(status).json(ErrorHandling::new(message)))
+        }
+    }
 }
 
 pub async fn authenticate_user(

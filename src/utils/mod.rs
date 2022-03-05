@@ -2,7 +2,6 @@ use crate::database::{self, database::DbPool};
 
 pub mod errors;
 pub mod hash;
-
 #[derive(Clone)]
 pub struct Data {
     pub pool: Box<DbPool>,
