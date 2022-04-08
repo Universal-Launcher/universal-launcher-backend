@@ -1,7 +1,7 @@
-use actix_web::{web, Scope};
+use actix_web::{web, Resource};
 
 use crate::handlers::base;
 
-pub fn register() -> Scope {
-    web::scope("/").service(web::resource("").route(web::get().to(base::index)))
+pub fn register() -> Resource {
+    web::resource("/").route(web::get().to(base::index))
 }

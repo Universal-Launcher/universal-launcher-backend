@@ -1,5 +1,15 @@
-use actix_web::error::QueryPayloadError;
-use actix_web::{error, web, HttpRequest, HttpResponse};
+use actix_csrf::{
+    extractor::{CsrfCookieConfig, CsrfHeaderConfig},
+    CsrfMiddleware,
+};
+use actix_session::{storage::RedisActorSessionStore, SessionMiddleware};
+use actix_web::{
+    cookie::Key,
+    error::{self, QueryPayloadError},
+    http::Method,
+    web, HttpRequest, HttpResponse,
+};
+use rand::prelude::StdRng;
 
 use crate::utils::errors::ErrorHandling;
 
@@ -9,10 +19,36 @@ mod modpacks;
 mod user;
 
 pub fn router(cfg: &mut web::ServiceConfig) {
-    cfg.service(base::register());
-    cfg.service(modpacks::register());
-    cfg.service(modpack_versions::register());
-    cfg.service(user::register());
+    let redis_connection_string = std::env::var("REDIS_URL").expect("REDIS_URL not set");
+    let app_secret = std::env::var("APP_SECRET").expect("APP_SECRET not set");
+
+    let csrf = CsrfMiddleware::<StdRng>::new()
+        .cookie_name("universal-launcher-csrf")
+        .http_only(false)
+        .set_cookie(Method::GET, "/panel/")
+        .set_cookie(Method::POST, "/panel/user/auth");
+
+    let csrf_cookie_config = CsrfCookieConfig {
+        cookie_name: "universal-launcher-csrf".to_string(),
+    };
+    let csrf_header_config = CsrfHeaderConfig {
+        header_name: "X-XSRF-TOKEN".to_string(),
+    };
+
+    cfg.service(
+        web::scope("/panel")
+            .app_data(csrf_cookie_config)
+            .app_data(csrf_header_config)
+            .service(base::register())
+            .service(user::register())
+            .service(modpacks::register())
+            .service(modpack_versions::register())
+            .wrap(SessionMiddleware::new(
+                RedisActorSessionStore::new(redis_connection_string),
+                Key::from(app_secret.as_bytes()),
+            ))
+            .wrap(csrf),
+    );
 
     cfg.app_data(web::JsonConfig::default().error_handler(json_error_handler));
 

@@ -42,8 +42,7 @@ pub struct NewUser {
     pub confirmation: String,
 }
 
-#[derive(Debug, Clone, QueryableByName, Serialize, Deserialize, Validate)]
-#[table_name = "users"]
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
 pub struct UserLogin {
     #[validate(email(message = "errors.validation.email.invalid"))]
     pub email: String,

@@ -2,7 +2,9 @@
 extern crate diesel;
 
 use actix_cors::Cors;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_csrf::{extractor::CsrfCookieConfig, CsrfMiddleware};
+use actix_web::{http::Method, middleware, web, App, HttpServer};
+use rand::prelude::StdRng;
 use tokio;
 
 mod actions;
@@ -28,7 +30,7 @@ fn main() {
 }
 
 async fn async_main() {
-    std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
+    std::env::set_var("RUST_LOG", "actix_server=info,actix_web=debug");
     env_logger::init();
     dotenv::dotenv().ok();
 
@@ -37,10 +39,11 @@ async fn async_main() {
     println!("Booting server on port \"{}\"", port);
     HttpServer::new(move || {
         let cors_origin = std::env::var("CORS_ORIGIN").unwrap_or("".to_string());
+        let pool = database::database::init_database();
 
         let mut cors = Cors::default()
             .allow_any_method()
-            .allow_any_header()
+            .supports_credentials()
             .max_age(3600);
 
         if cors_origin.len() > 0 {
@@ -53,10 +56,13 @@ async fn async_main() {
         let data = utils::load_data().expect("Failed to load data");
 
         App::new()
+            //.app_data(web::Data::new(csrf_cookie_config))
             .app_data(web::Data::new(data))
+            .app_data(web::Data::new(pool))
             .configure(router)
-            .wrap(middleware::Logger::default())
             .wrap(cors)
+            .wrap(middleware::Compress::default())
+            .wrap(middleware::Logger::default())
     })
     .workers(8)
     .bind(format!("0.0.0.0:{}", port))

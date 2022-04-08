@@ -1,3 +1,4 @@
+use crate::database::database::DbPool;
 use crate::database::models::user::NewDbUser;
 use crate::database::models::user::{NewUser, User, UserLogin};
 use crate::database::schema::users::dsl as user_dsl;
@@ -5,11 +6,8 @@ use crate::utils;
 use actix_web::http;
 use diesel::prelude::*;
 
-pub fn check_if_exists(
-    nu: &NewUser,
-    data: &utils::Data,
-) -> Result<bool, (http::StatusCode, String)> {
-    let conn = data.pool.get().map_err(|_| {
+pub fn check_if_exists(nu: &NewUser, pool: &DbPool) -> Result<bool, (http::StatusCode, String)> {
+    let conn = pool.get().map_err(|_| {
         (
             http::StatusCode::INTERNAL_SERVER_ERROR,
             "errors.database_connection".to_string(),
@@ -33,8 +31,12 @@ pub fn check_if_exists(
     }
 }
 
-pub fn create_user(nu: &NewUser, data: &utils::Data) -> Result<(), (http::StatusCode, String)> {
-    let conn = data.pool.get().map_err(|_| {
+pub fn create_user(
+    nu: &NewUser,
+    data: &utils::Data,
+    pool: &DbPool,
+) -> Result<(), (http::StatusCode, String)> {
+    let conn = pool.get().map_err(|_| {
         (
             http::StatusCode::INTERNAL_SERVER_ERROR,
             "errors.database_connection".to_string(),
@@ -60,8 +62,12 @@ pub fn create_user(nu: &NewUser, data: &utils::Data) -> Result<(), (http::Status
     Ok(())
 }
 
-pub fn login_user(ul: &UserLogin, data: &utils::Data) -> Result<User, (http::StatusCode, String)> {
-    let conn = data.pool.get().map_err(|_| {
+pub fn login_user(
+    ul: &UserLogin,
+    data: &utils::Data,
+    pool: &DbPool,
+) -> Result<User, (http::StatusCode, String)> {
+    let conn = pool.get().map_err(|_| {
         (
             http::StatusCode::INTERNAL_SERVER_ERROR,
             "errors.database_connection".to_string(),
