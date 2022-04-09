@@ -2,9 +2,8 @@
 extern crate diesel;
 
 use actix_cors::Cors;
-use actix_csrf::{extractor::CsrfCookieConfig, CsrfMiddleware};
-use actix_web::{http::Method, middleware, web, App, HttpServer};
-use rand::prelude::StdRng;
+use actix_session::{storage::RedisSessionStore, SessionMiddleware};
+use actix_web::{cookie::Key, middleware, web, App, HttpResponse, HttpServer};
 use tokio;
 
 mod actions;
@@ -35,6 +34,12 @@ async fn async_main() {
     dotenv::dotenv().ok();
 
     let port: String = std::env::var("PORT").unwrap_or(String::from("8080"));
+    let redis_connection_string = std::env::var("REDIS_URL").expect("REDIS_URL not set");
+    let app_secret = std::env::var("APP_SECRET").expect("APP_SECRET not set");
+
+    let store = RedisSessionStore::new(redis_connection_string)
+        .await
+        .unwrap();
 
     println!("Booting server on port \"{}\"", port);
     HttpServer::new(move || {
@@ -61,8 +66,13 @@ async fn async_main() {
             .app_data(web::Data::new(pool))
             .configure(router)
             .wrap(cors)
+            .wrap(SessionMiddleware::new(
+                store.clone(),
+                Key::from(app_secret.as_bytes()),
+            ))
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
+            .default_service(web::to(|| HttpResponse::Ok()))
     })
     .workers(8)
     .bind(format!("0.0.0.0:{}", port))

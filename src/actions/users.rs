@@ -98,3 +98,26 @@ pub fn login_user(
         )),
     }
 }
+
+pub fn get_user(user_id: i32, pool: &DbPool) -> Result<User, (http::StatusCode, String)> {
+    let conn = pool.get().map_err(|_| {
+        (
+            http::StatusCode::INTERNAL_SERVER_ERROR,
+            "errors.database_connection".to_string(),
+        )
+    })?;
+
+    let exists = user_dsl::users
+        .filter(user_dsl::id.eq(user_id))
+        .first::<User>(&conn)
+        .optional()
+        .map_err(|e| (http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    match exists {
+        Some(u) => Ok(u),
+        None => Err((
+            http::StatusCode::UNAUTHORIZED,
+            "errors.auth.not_found".to_string(),
+        )),
+    }
+}

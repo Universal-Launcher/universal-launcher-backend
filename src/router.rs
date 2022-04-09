@@ -2,9 +2,7 @@ use actix_csrf::{
     extractor::{CsrfCookieConfig, CsrfHeaderConfig},
     CsrfMiddleware,
 };
-use actix_session::{storage::RedisActorSessionStore, SessionMiddleware};
 use actix_web::{
-    cookie::Key,
     error::{self, QueryPayloadError},
     http::Method,
     web, HttpRequest, HttpResponse,
@@ -19,14 +17,10 @@ mod modpacks;
 mod user;
 
 pub fn router(cfg: &mut web::ServiceConfig) {
-    let redis_connection_string = std::env::var("REDIS_URL").expect("REDIS_URL not set");
-    let app_secret = std::env::var("APP_SECRET").expect("APP_SECRET not set");
-
     let csrf = CsrfMiddleware::<StdRng>::new()
         .cookie_name("universal-launcher-csrf")
         .http_only(false)
-        .set_cookie(Method::GET, "/panel/")
-        .set_cookie(Method::POST, "/panel/user/auth");
+        .set_cookie(Method::GET, "/panel/");
 
     let csrf_cookie_config = CsrfCookieConfig {
         cookie_name: "universal-launcher-csrf".to_string(),
@@ -43,10 +37,6 @@ pub fn router(cfg: &mut web::ServiceConfig) {
             .service(user::register())
             .service(modpacks::register())
             .service(modpack_versions::register())
-            .wrap(SessionMiddleware::new(
-                RedisActorSessionStore::new(redis_connection_string),
-                Key::from(app_secret.as_bytes()),
-            ))
             .wrap(csrf),
     );
 

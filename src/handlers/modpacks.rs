@@ -25,7 +25,7 @@ pub async fn create(
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    Ok(HttpResponse::Ok().body(""))
+    Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn show(path: web::Path<(i32,)>, pool: web::Data<DbPool>) -> HttpAsyncResponse {
@@ -54,7 +54,7 @@ pub async fn update(
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    Ok(HttpResponse::Ok().body(""))
+    Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn delete(path: web::Path<(i32,)>, pool: web::Data<DbPool>) -> HttpAsyncResponse {
