@@ -31,7 +31,7 @@ impl Hash {
         password: &str,
         hash: &str,
     ) -> Result<bool, password_hash::Error> {
-        let parsed_hash = PasswordHash::new(&hash)?;
+        let parsed_hash = PasswordHash::new(hash)?;
 
         let pass = self
             .argon2

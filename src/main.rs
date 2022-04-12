@@ -4,7 +4,6 @@ extern crate diesel;
 use actix_cors::Cors;
 use actix_session::{storage::RedisSessionStore, SessionMiddleware};
 use actix_web::{cookie::Key, middleware, web, App, HttpResponse, HttpServer};
-use tokio;
 
 mod actions;
 mod api_calls;
@@ -13,7 +12,6 @@ mod router;
 mod utils;
 
 mod database;
-use dotenv;
 use router::router;
 
 fn main() {
@@ -33,7 +31,7 @@ async fn async_main() {
     env_logger::init();
     dotenv::dotenv().ok();
 
-    let port: String = std::env::var("PORT").unwrap_or(String::from("8080"));
+    let port: String = std::env::var("PORT").unwrap_or_else(|_| String::from("8080"));
     let redis_connection_string = std::env::var("REDIS_URL").expect("REDIS_URL not set");
     let app_secret = std::env::var("APP_SECRET").expect("APP_SECRET not set");
 
@@ -43,15 +41,15 @@ async fn async_main() {
 
     println!("Booting server on port \"{}\"", port);
     HttpServer::new(move || {
-        let cors_origin = std::env::var("CORS_ORIGIN").unwrap_or("".to_string());
-        let pool = database::database::init_database();
+        let cors_origin = std::env::var("CORS_ORIGIN").unwrap_or_else(|_| "".to_string());
+        let pool = database::db::init_database();
 
         let mut cors = Cors::default()
             .allow_any_method()
             .supports_credentials()
             .max_age(3600);
 
-        if cors_origin.len() > 0 {
+        if cors_origin.is_empty() {
             cors = cors.allowed_origin(cors_origin.as_str());
         } else {
             println!("CORS_ORIGIN not set, CORS disabled");
@@ -72,11 +70,11 @@ async fn async_main() {
             ))
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
-            .default_service(web::to(|| HttpResponse::Ok()))
+            .default_service(web::to(HttpResponse::Ok))
     })
     .workers(8)
     .bind(format!("0.0.0.0:{}", port))
-    .expect(format!("Couldn't bind to port {}", port).as_str())
+    .unwrap_or_else(|_| panic!("Couldn't bind to port {}", port))
     .run()
     .await
     .unwrap()

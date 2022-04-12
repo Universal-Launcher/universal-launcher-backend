@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
 extern crate diesel;
-use crate::database::database::DbPool;
+use crate::database::db::DbPool;
 use crate::database::models::modpacks::*;
 use crate::{actions, handlers::HttpAsyncResponse};
 

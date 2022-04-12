@@ -3,7 +3,7 @@ use actix_session::Session;
 use actix_web::{http, web, HttpResponse};
 use actix_web_4_validator::Json;
 
-use crate::database::database::DbPool;
+use crate::database::db::DbPool;
 use crate::database::models::user::{NewUser, UserLogin};
 use crate::utils::errors::ErrorHandling;
 use crate::{actions, utils};

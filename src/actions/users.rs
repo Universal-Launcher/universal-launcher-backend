@@ -1,4 +1,4 @@
-use crate::database::database::DbPool;
+use crate::database::db::DbPool;
 use crate::database::models::user::NewDbUser;
 use crate::database::models::user::{NewUser, User, UserLogin};
 use crate::database::schema::users::dsl as user_dsl;

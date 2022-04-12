@@ -1,4 +1,4 @@
-use crate::database::database::{DbError, DbPool};
+use crate::database::db::{DbError, DbPool};
 use crate::database::models::modpacks::{Modpack, NewModpack, UpdateModpack};
 
 use diesel::prelude::*;
