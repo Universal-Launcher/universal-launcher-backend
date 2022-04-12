@@ -34,8 +34,4 @@ table! {
 
 joinable!(modpack_versions -> modpacks (modpack_id));
 
-allow_tables_to_appear_in_same_query!(
-    modpack_versions,
-    modpacks,
-    users,
-);
+allow_tables_to_appear_in_same_query!(modpack_versions, modpacks, users,);
