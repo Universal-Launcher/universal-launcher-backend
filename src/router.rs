@@ -2,6 +2,7 @@ use actix_csrf::{
     extractor::{CsrfCookieConfig, CsrfHeaderConfig},
     CsrfMiddleware,
 };
+use actix_web::http::header::HeaderName;
 use actix_web::{
     error::{self, QueryPayloadError},
     http::Method,
@@ -22,12 +23,8 @@ pub fn router(cfg: &mut web::ServiceConfig) {
         .http_only(false)
         .set_cookie(Method::GET, "/panel/");
 
-    let csrf_cookie_config = CsrfCookieConfig {
-        cookie_name: "universal-launcher-csrf".to_string(),
-    };
-    let csrf_header_config = CsrfHeaderConfig {
-        header_name: "X-XSRF-TOKEN".to_string(),
-    };
+    let csrf_cookie_config = CsrfCookieConfig::new("universal-launcher-csrf".to_string());
+    let csrf_header_config = CsrfHeaderConfig::new(HeaderName::from_static("X-XSRF-TOKEN"));
 
     cfg.service(
         web::scope("/panel")
